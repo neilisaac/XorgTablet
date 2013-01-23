@@ -1,7 +1,6 @@
 package com.gimpusers.xorgtablet;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -47,7 +46,6 @@ public class XorgClient implements Runnable {
 			DatagramSocket socket = new DatagramSocket();
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(baos);
 			
 			while (true) {
 				XEvent event = motionQueue.take();

@@ -1,14 +1,12 @@
 package com.gimpusers.xorgtablet;
 
-import java.util.concurrent.ExecutionException;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.util.Log;
+//import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
