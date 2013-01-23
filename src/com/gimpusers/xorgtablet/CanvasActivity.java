@@ -21,16 +21,11 @@ public class CanvasActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		PreferenceManager.setDefaultValues(this, R.xml.network_preferences, false);
-		PreferenceManager.setDefaultValues(this, R.xml.drawing_preferences, false);
-		
-		setContentView(R.layout.activity_canvas);
-		LinearLayout layout = (LinearLayout)findViewById(R.id.canvas_layout);
+		PreferenceManager.setDefaultValues(this, R.xml.tablet_preferences, false);
 		
 		new Thread(xorgClient = new XorgClient(PreferenceManager.getDefaultSharedPreferences(this))).start();
 
-		canvas = new CanvasView(this, xorgClient);
-		layout.addView(canvas);
+		setContentView(new CanvasView(this, xorgClient));
 	}
 
 	@Override

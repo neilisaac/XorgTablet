@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory
+        android:key="pref_key_storage_settings"
+        android:title="@string/preferences_networking" >
+        <EditTextPreference
+            android:defaultValue="please-replace.invalid"
+            android:key="host_preference"
+            android:singleLine="true"
+            android:title="@string/preferences_host_title" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="pref_key_storage_settings"
+        android:title="@string/preferences_input" >
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="stylus_only_preference"
+            android:title="@string/stylus_preference" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="absolute_motion_preference"
+            android:title="@string/absolute_preference" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
