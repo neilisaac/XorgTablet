@@ -69,8 +69,11 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 			for (int ptr = 0; ptr < event.getPointerCount(); ptr++)
 				if (!acceptStylusOnly || (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS)) {
 					//Log.i("XorgTablet", String.format("Generic motion event logged: %f|%f, pressure %f", event.getX(ptr), event.getY(ptr), event.getPressure(ptr)));
-					if (event.getActionMasked() == MotionEvent.ACTION_HOVER_MOVE)
-						xorgClient.getQueue().add(new XMotionEvent((int)event.getX(ptr), (int)event.getY(ptr), (int)(event.getPressure(ptr)*PRESSURE_RESOLUTION)));
+					if (event.getActionMasked() == MotionEvent.ACTION_HOVER_MOVE) {
+						int x = (int) event.getX(ptr);
+						int y = (int) event.getY(ptr);
+						int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
+						xorgClient.getQueue().add(new XMotionEvent(x, y, p, absoluteMotion));
 				}
 			return true;
 		}
@@ -82,17 +85,25 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 		if (isEnabled()) {
 			for (int ptr = 0; ptr < event.getPointerCount(); ptr++)
 				if (!acceptStylusOnly || (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS)) {
-					//Log.i("XorgTablet", String.format("Touch event logged: %f|%f, pressure %f", event.getX(ptr), event.getY(ptr), event.getPressure(ptr)));
+					int x = (int) event.getX(ptr);
+					int y = (int) event.getY(ptr);
+					int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
+					
+					// Log.i("XorgTablet", String.format("Touch event logged: %f|%f, pressure %f", x, y, p));
 					switch (event.getActionMasked()) {
 					case MotionEvent.ACTION_MOVE:
-						xorgClient.getQueue().add(new XMotionEvent((int)event.getX(ptr), (int)event.getY(ptr), (int)(event.getPressure(ptr)*PRESSURE_RESOLUTION)));
+						xorgClient.getQueue().add(new XMotionEvent(x, y, p, absoluteMotion));
 						break;
+						
 					case MotionEvent.ACTION_DOWN:
-						xorgClient.getQueue().add(new XButtonEvent((int)event.getX(ptr), (int)event.getY(ptr), (int)(event.getPressure(ptr)*PRESSURE_RESOLUTION), true));
+						xorgClient.getQueue().add(
+								new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, true, absoluteMotion));
 						break;
+						
 					case MotionEvent.ACTION_UP:
 					case MotionEvent.ACTION_CANCEL:
-						xorgClient.getQueue().add(new XButtonEvent((int)event.getX(ptr), (int)event.getY(ptr), (int)(event.getPressure(ptr)*PRESSURE_RESOLUTION), false));
+						xorgClient.getQueue().add(
+								new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, false, absoluteMotion));
 						break;
 					}
 						

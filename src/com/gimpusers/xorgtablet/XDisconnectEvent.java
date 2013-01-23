@@ -2,11 +2,6 @@ package com.gimpusers.xorgtablet;
 
 public class XDisconnectEvent extends XEvent {
 	public XDisconnectEvent() {
-		super(0, 0, 0);
-	}
-
-	@Override
-	public byte[] toByteArray() {
-		return null;
+		super(Type.DISCONNECT, 0, 0, 0, Button.NO_BUTTON, false);
 	}
 }
