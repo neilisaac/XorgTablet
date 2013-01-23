@@ -20,6 +20,7 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	XorgClient xorgClient;
 	SharedPreferences settings;
 	boolean acceptStylusOnly;
+	boolean absoluteMotion;
 	
 	public CanvasView(Context context, XorgClient xorgClient) {
 		super(context);
@@ -31,6 +32,7 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 		settings = PreferenceManager.getDefaultSharedPreferences(context);
 		settings.registerOnSharedPreferenceChangeListener(this);
 		reconfigureAcceptedInputDevices();
+		reconfigureMotionSettings();
 		
 		this.xorgClient = xorgClient;
 		new ConfigureNetworkingTask().execute();
@@ -42,6 +44,12 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 			new ConfigureNetworkingTask().execute();
 		else if (key.equals(SettingsActivity.KEY_PREF_STYLUS_ONLY))
 			reconfigureAcceptedInputDevices();
+		else if (key.equals(SettingsActivity.KEY_PREF_ABSOLUTE_MOTION))
+			reconfigureMotionSettings();
+	}
+	
+	void reconfigureMotionSettings() {
+		absoluteMotion = settings.getBoolean(SettingsActivity.KEY_PREF_ABSOLUTE_MOTION, true);
 	}
 		
 	void reconfigureAcceptedInputDevices() {
