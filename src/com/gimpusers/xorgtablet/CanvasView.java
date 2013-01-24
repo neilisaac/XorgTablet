@@ -17,8 +17,8 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	
 	XorgClient xorgClient;
 	SharedPreferences settings;
-	boolean acceptStylusOnly;
-	boolean absoluteMotion;
+	boolean touchEnabled;
+	boolean touchAbsolute;
 	
 	public CanvasView(Context context, XorgClient xorgClient) {
 		super(context);
@@ -40,49 +40,55 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	public void onSharedPreferenceChanged(SharedPreferences pref, String key) {
 		if (key.equals(SettingsActivity.KEY_PREF_HOST))
 			new ConfigureNetworkingTask().execute();
-		else if (key.equals(SettingsActivity.KEY_PREF_STYLUS_ONLY))
+		else if (key.equals(SettingsActivity.KEY_PREF_TOUCH))
 			reconfigureAcceptedInputDevices();
-		else if (key.equals(SettingsActivity.KEY_PREF_ABSOLUTE_MOTION))
+		else if (key.equals(SettingsActivity.KEY_PREF_TOUCH_ABSOLUTE))
 			reconfigureMotionSettings();
 	}
 	
 	void reconfigureMotionSettings() {
-		absoluteMotion = settings.getBoolean(SettingsActivity.KEY_PREF_ABSOLUTE_MOTION, true);
+		touchAbsolute = settings.getBoolean(SettingsActivity.KEY_PREF_TOUCH_ABSOLUTE, false);
 	}
 		
 	void reconfigureAcceptedInputDevices() {
-		acceptStylusOnly = settings.getBoolean(SettingsActivity.KEY_PREF_STYLUS_ONLY, false);
+		touchEnabled = settings.getBoolean(SettingsActivity.KEY_PREF_TOUCH, true);
 	}
 	
 	@Override
 	protected void onSizeChanged (int w, int h, int oldw, int oldh) {
 		Toast.makeText(getContext(), String.format("%dx%d", w, h), Toast.LENGTH_SHORT).show();
-		xorgClient.getQueue().add(new XConfigurationEvent(w, h, PRESSURE_RESOLUTION));
+		xorgClient.queue(new XConfigurationEvent(w, h, PRESSURE_RESOLUTION));
 	}
 	
 	
 	@Override
 	public boolean onGenericMotionEvent(MotionEvent event) {
+		boolean consumedEvent = false;
+		
 		if (isEnabled()) {
-			for (int ptr = 0; ptr < event.getPointerCount(); ptr++)
-				if (!acceptStylusOnly || (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS)) {
+			for (int ptr = 0; ptr < event.getPointerCount(); ptr++) {
+				if (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS) {
 					//Log.i("XorgTablet", String.format("Generic motion event logged: %f|%f, pressure %f", event.getX(ptr), event.getY(ptr), event.getPressure(ptr)));
+					
 					if (event.getActionMasked() == MotionEvent.ACTION_HOVER_MOVE) {
 						int x = (int) event.getX(ptr);
 						int y = (int) event.getY(ptr);
 						int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
-						xorgClient.getQueue().add(new XMotionEvent(x, y, p, absoluteMotion));
+						xorgClient.queue(new XMotionEvent(x, y, p, true));
+						consumedEvent = true;
+					}
 				}
-			return true;
+			}
 		}
-		return false;
+		
+		return consumedEvent;
 	}
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if (isEnabled()) {
 			for (int ptr = 0; ptr < event.getPointerCount(); ptr++)
-				if (!acceptStylusOnly || (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS)) {
+				if (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS || (touchAbsolute && touchEnabled)) {
 					int x = (int) event.getX(ptr);
 					int y = (int) event.getY(ptr);
 					int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
@@ -90,18 +96,19 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 					// Log.i("XorgTablet", String.format("Touch event logged: %f|%f, pressure %f", x, y, p));
 					switch (event.getActionMasked()) {
 					case MotionEvent.ACTION_MOVE:
-						xorgClient.getQueue().add(new XMotionEvent(x, y, p, absoluteMotion));
-						break;
+						xorgClient.queue(new XMotionEvent(x, y, p, true));
+						return true;
 						
 					case MotionEvent.ACTION_DOWN:
-						xorgClient.getQueue().add(
-								new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, true, absoluteMotion));
-						break;
+						xorgClient.queue(new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, true, true));
+						return true;
 						
 					case MotionEvent.ACTION_UP:
 					case MotionEvent.ACTION_CANCEL:
-						xorgClient.getQueue().add(
-								new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, false, absoluteMotion));
+						xorgClient.queue(new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, false, true));
+						return true;
+						
+					default:
 						break;
 					}
 						

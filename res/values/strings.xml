@@ -6,8 +6,8 @@
     <string name="preferences_host_title">X.org host</string>
     <string name="preferences_networking">Networking</string>
     <string name="preferences_input">Input</string>
-    <string name="stylus_preference">Sense stylus only</string>
-    <string name="absolute_preference">Absolute motion (disable for relative)</string>
+    <string name="touch_input_preference">Enable touch input</string>
+    <string name="absolute_preference">Use absolute position for touch input</string>
     <string name="menu_about">About</string>
 
 </resources>

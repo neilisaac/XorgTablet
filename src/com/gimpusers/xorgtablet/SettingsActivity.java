@@ -6,8 +6,8 @@ import android.preference.PreferenceActivity;
 public class SettingsActivity extends PreferenceActivity {
     public static final String
 		KEY_PREF_HOST = "host_preference",
-		KEY_PREF_STYLUS_ONLY = "stylus_only_preference",
-		KEY_PREF_ABSOLUTE_MOTION = "absolute_motion_preference";
+		KEY_PREF_TOUCH = "touch_input_preference",
+		KEY_PREF_TOUCH_ABSOLUTE = "absolute_motion_preference";
 
     @SuppressWarnings("deprecation")
 	@Override

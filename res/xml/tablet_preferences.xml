@@ -14,13 +14,14 @@
         android:key="pref_key_storage_settings"
         android:title="@string/preferences_input" >
         <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="stylus_only_preference"
-            android:title="@string/stylus_preference" />
-        <CheckBoxPreference
             android:defaultValue="true"
+            android:key="touch_input_preference"
+            android:title="@string/touch_input_preference" />
+        <CheckBoxPreference
+            android:defaultValue="false"
             android:key="absolute_motion_preference"
-            android:title="@string/absolute_preference" />
+            android:title="@string/absolute_preference"
+            android:dependency="touch_input_preference" />
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -27,7 +27,7 @@ public class CanvasActivity extends Activity {
 
 	@Override
 	protected void onDestroy() {
-		xorgClient.getQueue().add(new XDisconnectEvent());
+		xorgClient.queue(new XDisconnectEvent());
 		super.onDestroy();
 	}
 	

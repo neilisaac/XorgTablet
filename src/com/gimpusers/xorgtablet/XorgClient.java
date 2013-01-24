@@ -14,18 +14,23 @@ import android.util.Log;
 
 
 public class XorgClient implements Runnable {
-	LinkedBlockingQueue<XEvent> motionQueue = new LinkedBlockingQueue<XEvent>();
-	LinkedBlockingQueue<XEvent> getQueue() { return motionQueue; }
 	
-	InetAddress destAddress;
-	SharedPreferences preferences;
-	XConfigurationEvent lastConfiguration = null;
+	private LinkedBlockingQueue<XEvent> motionQueue;
+	
+	private InetAddress destAddress;
+	private SharedPreferences preferences;
+	private XConfigurationEvent lastConfiguration = null;
 
-	XorgClient(SharedPreferences preferences) {
+	public XorgClient(SharedPreferences preferences) {
 		this.preferences = preferences;
+		motionQueue = new LinkedBlockingQueue<XEvent>();
 	}
 	
-	boolean configureNetworking() {
+	public void queue(XEvent event) {
+		motionQueue.add(event);
+	}
+	
+	public boolean configureNetworking() {
 		try {
 			String hostName = preferences.getString(SettingsActivity.KEY_PREF_HOST, "unknown.invalid");
 			destAddress = InetAddress.getByName(hostName);
