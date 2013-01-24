@@ -6,19 +6,21 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-//import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.GestureDetector.OnGestureListener;
 import android.widget.Toast;
 
 @SuppressLint("ViewConstructor")
-public class CanvasView extends View implements OnSharedPreferenceChangeListener {
+public class CanvasView extends View implements OnSharedPreferenceChangeListener, OnGestureListener {
 	final static int PRESSURE_RESOLUTION = 10000;
 	
 	XorgClient xorgClient;
 	SharedPreferences settings;
 	boolean touchEnabled;
 	boolean touchAbsolute;
+	private GestureDetector gesture;
 	
 	public CanvasView(Context context, XorgClient xorgClient) {
 		super(context);
@@ -31,8 +33,11 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 		settings.registerOnSharedPreferenceChangeListener(this);
 		reconfigureAcceptedInputDevices();
 		reconfigureMotionSettings();
+
+		gesture = new GestureDetector(context, this);
 		
 		this.xorgClient = xorgClient;
+		
 		new ConfigureNetworkingTask().execute();
 	}
 
@@ -60,7 +65,6 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 		xorgClient.queue(new XConfigurationEvent(w, h, PRESSURE_RESOLUTION));
 	}
 	
-	
 	@Override
 	public boolean onGenericMotionEvent(MotionEvent event) {
 		boolean consumedEvent = false;
@@ -86,38 +90,77 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		if (isEnabled()) {
-			for (int ptr = 0; ptr < event.getPointerCount(); ptr++)
-				if (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS || (touchAbsolute && touchEnabled)) {
-					int x = (int) event.getX(ptr);
-					int y = (int) event.getY(ptr);
-					int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
+		if (!isEnabled())
+			return false;
+		
+		for (int ptr = 0; ptr < event.getPointerCount(); ptr++) {
+			int x = (int) event.getX(ptr);
+			int y = (int) event.getY(ptr);
+			int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
+			
+			// Log.i("XorgTablet", String.format("Touch event logged: %f|%f, pressure %f", x, y, p));
+			
+			if (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS || (touchAbsolute && touchEnabled)) {
+				
+				switch (event.getActionMasked()) {
+				
+				case MotionEvent.ACTION_MOVE:
+					xorgClient.queue(new XMotionEvent(x, y, p, true));
+					return true;
 					
-					// Log.i("XorgTablet", String.format("Touch event logged: %f|%f, pressure %f", x, y, p));
-					switch (event.getActionMasked()) {
-					case MotionEvent.ACTION_MOVE:
-						xorgClient.queue(new XMotionEvent(x, y, p, true));
-						return true;
-						
-					case MotionEvent.ACTION_DOWN:
-						xorgClient.queue(new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, true, true));
-						return true;
-						
-					case MotionEvent.ACTION_UP:
-					case MotionEvent.ACTION_CANCEL:
-						xorgClient.queue(new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, false, true));
-						return true;
-						
-					default:
-						break;
-					}
-						
+				case MotionEvent.ACTION_DOWN:
+					xorgClient.queue(new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, true, true));
+					return true;
+					
+				case MotionEvent.ACTION_UP:
+				case MotionEvent.ACTION_CANCEL:
+					xorgClient.queue(new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, false, true));
+					return true;
+					
+				default:
+					break;
 				}
-			return true;
+			}
+			
+			else if (touchEnabled && !touchAbsolute) {
+				return gesture.onTouchEvent(event);
+			}
 		}
+		
 		return false;
 	}
-	
+
+	@Override
+	public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx, float dy) {
+		xorgClient.queue(new XMotionEvent((int) -dx, (int) -dy, 0, false));
+		return true;
+	}
+
+	@Override
+	public boolean onDown(MotionEvent event) {
+		return true;
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent event) {
+		int p = (int) (event.getPressure() * PRESSURE_RESOLUTION);
+		xorgClient.queue(new XButtonEvent(0, 0, p, XEvent.Button.BUTTON_1, true, false));
+		xorgClient.queue(new XButtonEvent(0, 0, p, XEvent.Button.BUTTON_1, false, false));
+		return true;
+	}
+
+	@Override
+	public void onShowPress(MotionEvent arg0) {
+	}
+
+	@Override
+	public void onLongPress(MotionEvent e) {
+	}
+
+	@Override
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float vx, float vy) {
+		return false;
+	}
 	
 	private class ConfigureNetworkingTask extends AsyncTask<Void, Void, Boolean> {
 		@Override
