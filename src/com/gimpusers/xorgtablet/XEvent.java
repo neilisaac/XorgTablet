@@ -16,8 +16,8 @@ public abstract class XEvent {
 
 	public XEvent(Type type, int x, int y, int pressure, Button button, boolean down) {
 		this.type = type;
-		this.x = Math.max(x, 0);
-		this.y = Math.max(y, 0);
+		this.x = x;
+		this.y = y;
 		this.pressure = pressure;
 		this.button = button;
 		this.down = down;
