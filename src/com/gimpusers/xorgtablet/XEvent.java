@@ -27,6 +27,9 @@ public abstract class XEvent {
 		if (type == Type.DISCONNECT)
 			return null;
 		
+		//Log.d("toByteArray", "type=" + type.ordinal() +  " x=" + x + " y=" + y +
+		//		" pressure=" + pressure + " button=" + button.ordinal() + " down=" + down);
+		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dos = new DataOutputStream(baos);
 		
