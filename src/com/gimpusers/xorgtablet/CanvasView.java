@@ -16,10 +16,10 @@ import android.widget.Toast;
 public class CanvasView extends View implements OnSharedPreferenceChangeListener, OnGestureListener {
 	final static int PRESSURE_RESOLUTION = 10000;
 	
-	XorgClient xorgClient;
-	SharedPreferences settings;
-	boolean touchEnabled;
-	boolean touchAbsolute;
+	private XorgClient xorgClient;
+	private SharedPreferences settings;
+	private boolean touchEnabled;
+	private boolean touchAbsolute;
 	private GestureDetector gesture;
 	
 	public CanvasView(Context context, XorgClient xorgClient) {
@@ -67,20 +67,21 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	
 	@Override
 	public boolean onGenericMotionEvent(MotionEvent event) {
+		if (!isEnabled())
+			return false;
+		
 		boolean consumedEvent = false;
 		
-		if (isEnabled()) {
-			for (int ptr = 0; ptr < event.getPointerCount(); ptr++) {
-				if (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS) {
-					//Log.i("XorgTablet", String.format("Generic motion event logged: %f|%f, pressure %f", event.getX(ptr), event.getY(ptr), event.getPressure(ptr)));
-					
-					if (event.getActionMasked() == MotionEvent.ACTION_HOVER_MOVE) {
-						int x = (int) event.getX(ptr);
-						int y = (int) event.getY(ptr);
-						int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
-						xorgClient.queue(XEvent.motion(x, y, p, true));
-						consumedEvent = true;
-					}
+		for (int ptr = 0; ptr < event.getPointerCount(); ptr++) {
+			if (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS) {
+				//Log.i("XorgTablet", String.format("Generic motion event logged: %f|%f, pressure %f", event.getX(ptr), event.getY(ptr), event.getPressure(ptr)));
+				
+				if (event.getActionMasked() == MotionEvent.ACTION_HOVER_MOVE) {
+					int x = (int) event.getX(ptr);
+					int y = (int) event.getY(ptr);
+					int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
+					xorgClient.queue(XEvent.motion(x, y, p, true));
+					consumedEvent = true;
 				}
 			}
 		}
