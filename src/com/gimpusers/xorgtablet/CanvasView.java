@@ -94,6 +94,8 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 		if (!isEnabled())
 			return false;
 		
+		setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+		
 		for (int ptr = 0; ptr < event.getPointerCount(); ptr++) {
 			int x = (int) event.getX(ptr);
 			int y = (int) event.getY(ptr);
