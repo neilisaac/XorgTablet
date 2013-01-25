@@ -1,11 +1,13 @@
 package com.gimpusers.xorgtablet;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,9 +23,13 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	private boolean touchEnabled;
 	private boolean touchAbsolute;
 	private GestureDetector gesture;
+	private Activity activity;
 	
 	public CanvasView(Context context, XorgClient xorgClient) {
 		super(context);
+		
+		activity = (Activity) context;
+		this.xorgClient = xorgClient;
 		
 		// disable until networking has been configured
 		setEnabled(false);
@@ -35,8 +41,6 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 		reconfigureMotionSettings();
 
 		gesture = new GestureDetector(context, this);
-		
-		this.xorgClient = xorgClient;
 		
 		new ConfigureNetworkingTask().execute();
 	}
@@ -94,6 +98,7 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 		if (!isEnabled())
 			return false;
 		
+		activity.getActionBar().hide();
 		setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
 		
 		for (int ptr = 0; ptr < event.getPointerCount(); ptr++) {
