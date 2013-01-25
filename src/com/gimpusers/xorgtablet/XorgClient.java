@@ -7,6 +7,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.gimpusers.xorgtablet.XEvent.Type;
+
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -19,7 +21,7 @@ public class XorgClient implements Runnable {
 	
 	private InetAddress destAddress;
 	private SharedPreferences preferences;
-	private XConfigurationEvent lastConfiguration = null;
+	private XEvent lastConfiguration = null;
 
 	public XorgClient(SharedPreferences preferences) {
 		this.preferences = preferences;
@@ -56,10 +58,10 @@ public class XorgClient implements Runnable {
 				XEvent event = motionQueue.take();
 				
 				// save resolution, even if not sending it
-				if (event.getClass() == XConfigurationEvent.class)
-					lastConfiguration = (XConfigurationEvent)event;
+				if (event.getType() == XEvent.Type.RESOLUTION)
+					lastConfiguration = event;
 				// graceful shutdown
-				else if (event.getClass() == XDisconnectEvent.class)
+				else if (event.getType() == Type.DISCONNECT)
 					break;
 				
 				if (destAddress == null)		// no valid destination host

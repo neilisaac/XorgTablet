@@ -62,7 +62,7 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	@Override
 	protected void onSizeChanged (int w, int h, int oldw, int oldh) {
 		Toast.makeText(getContext(), String.format("%dx%d", w, h), Toast.LENGTH_SHORT).show();
-		xorgClient.queue(new XConfigurationEvent(w, h, PRESSURE_RESOLUTION));
+		xorgClient.queue(XEvent.configuration(w, h, PRESSURE_RESOLUTION));
 	}
 	
 	@Override
@@ -78,7 +78,7 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 						int x = (int) event.getX(ptr);
 						int y = (int) event.getY(ptr);
 						int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
-						xorgClient.queue(new XMotionEvent(x, y, p, true));
+						xorgClient.queue(XEvent.motion(x, y, p, true));
 						consumedEvent = true;
 					}
 				}
@@ -105,16 +105,16 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 				switch (event.getActionMasked()) {
 				
 				case MotionEvent.ACTION_MOVE:
-					xorgClient.queue(new XMotionEvent(x, y, p, true));
+					xorgClient.queue(XEvent.motion(x, y, p, true));
 					return true;
 					
 				case MotionEvent.ACTION_DOWN:
-					xorgClient.queue(new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, true, true));
+					xorgClient.queue(XEvent.button(x, y, p, XEvent.Button.BUTTON_1, true, true));
 					return true;
 					
 				case MotionEvent.ACTION_UP:
 				case MotionEvent.ACTION_CANCEL:
-					xorgClient.queue(new XButtonEvent(x, y, p, XEvent.Button.BUTTON_1, false, true));
+					xorgClient.queue(XEvent.button(x, y, p, XEvent.Button.BUTTON_1, false, true));
 					return true;
 					
 				default:
@@ -132,7 +132,7 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 
 	@Override
 	public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx, float dy) {
-		xorgClient.queue(new XMotionEvent((int) -dx, (int) -dy, 0, false));
+		xorgClient.queue(XEvent.motion((int) -dx, (int) -dy, 0, false));
 		return true;
 	}
 
@@ -144,8 +144,8 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	@Override
 	public boolean onSingleTapUp(MotionEvent event) {
 		int p = (int) (event.getPressure() * PRESSURE_RESOLUTION);
-		xorgClient.queue(new XButtonEvent(0, 0, p, XEvent.Button.BUTTON_1, true, false));
-		xorgClient.queue(new XButtonEvent(0, 0, p, XEvent.Button.BUTTON_1, false, false));
+		xorgClient.queue(XEvent.button(0, 0, p, XEvent.Button.BUTTON_1, true, false));
+		xorgClient.queue(XEvent.button(0, 0, p, XEvent.Button.BUTTON_1, false, false));
 		return true;
 	}
 

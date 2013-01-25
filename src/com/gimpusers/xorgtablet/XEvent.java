@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public abstract class XEvent {
+public class XEvent {
 	
 	public enum Type { MOTION_ABSOLUTE, BUTTON_ABSOLUTE, RESOLUTION, MOTION_RELATIVE, BUTTON_RELATIVE, DISCONNECT };
 	public enum Button { NO_BUTTON, BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5 };
@@ -22,7 +22,27 @@ public abstract class XEvent {
 		this.button = button;
 		this.down = down;
 	}
-		
+	
+	public static XEvent button(int x, int y, int pressure, Button button, boolean down, boolean absolute) {
+		return new XEvent(absolute ? Type.BUTTON_ABSOLUTE : Type.BUTTON_RELATIVE, x, y, pressure, button, down);
+	}
+	
+	public static XEvent configuration(int width, int height, int pressure) {
+		return new XEvent(Type.RESOLUTION, width, height, pressure, Button.NO_BUTTON, false);
+	}
+	
+	public static XEvent disconnect() {
+		return new XEvent(Type.DISCONNECT, 0, 0, 0, Button.NO_BUTTON, false);
+	}
+	
+	public static XEvent motion(int x, int y, int pressure, boolean absolute) {
+		return new XEvent(absolute ? Type.MOTION_ABSOLUTE : Type.MOTION_RELATIVE, x, y, pressure, Button.NO_BUTTON, false);
+	}
+	
+	public Type getType() {
+		return type;
+	}
+	
 	public byte[] toByteArray() {
 		if (type == Type.DISCONNECT)
 			return null;
