@@ -5,7 +5,7 @@
         android:key="pref_key_storage_settings"
         android:title="@string/preferences_networking" >
         <EditTextPreference
-            android:defaultValue="please-replace.invalid"
+            android:defaultValue=""
             android:key="host_preference"
             android:singleLine="true"
             android:title="@string/preferences_host_title" />
@@ -19,9 +19,16 @@
             android:title="@string/touch_input_preference" />
         <CheckBoxPreference
             android:defaultValue="false"
+            android:dependency="touch_input_preference"
             android:key="absolute_motion_preference"
-            android:title="@string/absolute_preference"
-            android:dependency="touch_input_preference" />
+            android:title="@string/absolute_preference" />
+        <ListPreference
+            android:defaultValue="0.2"
+            android:dependency="absolute_motion_preference"
+            android:entries="@array/pressure_threshold_values"
+            android:entryValues="@array/pressure_threshold_values"
+            android:key="pressure_threshold_preference"
+            android:title="@string/pressure_threshold_preference" />
     </PreferenceCategory>
 
 </PreferenceScreen>

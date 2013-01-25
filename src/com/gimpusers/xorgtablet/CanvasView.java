@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 @SuppressLint("ViewConstructor")
 public class CanvasView extends View implements OnSharedPreferenceChangeListener, OnGestureListener {
-	final static int PRESSURE_RESOLUTION = 10000;
 	
 	private XorgClient xorgClient;
 	private SharedPreferences settings;
@@ -24,6 +23,8 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	private boolean touchAbsolute;
 	private GestureDetector gesture;
 	private Activity activity;
+	private boolean down;
+	private float pressureThreshold;
 	
 	public CanvasView(Context context, XorgClient xorgClient) {
 		super(context);
@@ -31,14 +32,18 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 		activity = (Activity) context;
 		this.xorgClient = xorgClient;
 		
+		down = false;
+		
 		// disable until networking has been configured
 		setEnabled(false);
+		
 		setBackgroundColor(0xFFD0D0D0);
 
 		settings = PreferenceManager.getDefaultSharedPreferences(context);
 		settings.registerOnSharedPreferenceChangeListener(this);
 		reconfigureAcceptedInputDevices();
 		reconfigureMotionSettings();
+		reconfigurePressureThreshold();
 
 		gesture = new GestureDetector(context, this);
 		
@@ -53,6 +58,8 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 			reconfigureAcceptedInputDevices();
 		else if (key.equals(SettingsActivity.KEY_PREF_TOUCH_ABSOLUTE))
 			reconfigureMotionSettings();
+		else if (key.equals(SettingsActivity.KEY_PREF_PRESSURE_THRESHOLD))
+			reconfigurePressureThreshold();
 	}
 	
 	void reconfigureMotionSettings() {
@@ -63,10 +70,14 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 		touchEnabled = settings.getBoolean(SettingsActivity.KEY_PREF_TOUCH, true);
 	}
 	
+	void reconfigurePressureThreshold() {
+		pressureThreshold = Float.parseFloat(settings.getString(SettingsActivity.KEY_PREF_PRESSURE_THRESHOLD, "0.2"));
+	}
+	
 	@Override
 	protected void onSizeChanged (int w, int h, int oldw, int oldh) {
-		Toast.makeText(getContext(), String.format("%dx%d", w, h), Toast.LENGTH_SHORT).show();
-		xorgClient.queue(XEvent.configuration(w, h, PRESSURE_RESOLUTION));
+		Log.i(getClass().getName(), "Setting resolution to " + w + "x" + h);
+		xorgClient.queue(XEvent.configuration(w, h));
 	}
 	
 	@Override
@@ -83,7 +94,7 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 				if (event.getActionMasked() == MotionEvent.ACTION_HOVER_MOVE) {
 					int x = (int) event.getX(ptr);
 					int y = (int) event.getY(ptr);
-					int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
+					float p = event.getPressure(ptr);
 					xorgClient.queue(XEvent.motion(x, y, p, true));
 					consumedEvent = true;
 				}
@@ -101,14 +112,15 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 		activity.getActionBar().hide();
 		setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
 		
+		// first consider a stylus and ignore other pointers if one exists
 		for (int ptr = 0; ptr < event.getPointerCount(); ptr++) {
 			int x = (int) event.getX(ptr);
 			int y = (int) event.getY(ptr);
-			int p = (int) (event.getPressure(ptr) * PRESSURE_RESOLUTION);
+			float p = event.getPressure(ptr);
 			
-			// Log.i("XorgTablet", String.format("Touch event logged: %f|%f, pressure %f", x, y, p));
+//			Log.i("XorgTablet", String.format("Touch event logged: %d|%d, pressure %d", x, y, p));
 			
-			if (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS || (touchAbsolute && touchEnabled)) {
+			if (event.getToolType(ptr) == MotionEvent.TOOL_TYPE_STYLUS) {
 				
 				switch (event.getActionMasked()) {
 				
@@ -126,12 +138,28 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 					return true;
 					
 				default:
-					break;
+					return false;
 				}
 			}
 		}
-		
-		if (touchEnabled && !touchAbsolute) {			
+			
+		if (touchEnabled) {
+			if (touchAbsolute) {
+				int x = (int) event.getX();
+				int y = (int) event.getY();
+				float p = event.getPressure();
+				
+				//Log.i("XorgTablet", String.format("Touch event logged: %d|%d, pressure %f", x, y, p));
+				
+				if (!down && p >= pressureThreshold) {
+					xorgClient.queue(XEvent.button(x, y, p, XEvent.Button.BUTTON_1, true, true));
+					down = true;
+				} else if (down && p < pressureThreshold) {
+					xorgClient.queue(XEvent.button(x, y, p, XEvent.Button.BUTTON_1, false, true));
+					down = false;
+				}
+			}
+			
 			return gesture.onTouchEvent(event);
 		}
 		
@@ -141,12 +169,18 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	@Override
 	public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx, float dy) {
 		XEvent.Button button;
-		int p = (int) (e2.getPressure() * PRESSURE_RESOLUTION);
+		float p = e2.getPressure();
 		
 		switch (e2.getPointerCount()) {
 		default:
 		case 1:
-			xorgClient.queue(XEvent.motion((int) -dx, (int) -dy, 0, false));
+			if (touchAbsolute) {
+				int x = (int) e2.getX();
+				int y = (int) e2.getY();
+				xorgClient.queue(XEvent.motion(x, y, p, true));
+			} else {
+				xorgClient.queue(XEvent.motion((int) -dx, (int) -dy, 0, false));
+			}
 			break;
 			
 		case 2:
@@ -178,7 +212,7 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	@Override
 	public boolean onSingleTapUp(MotionEvent event) {
 		XEvent.Button button = XEvent.Button.BUTTON_1;
-		int p = (int) (event.getPressure() * PRESSURE_RESOLUTION);
+		float p = event.getPressure();
 		xorgClient.queue(XEvent.button(0, 0, p, button, true, false));
 		xorgClient.queue(XEvent.button(0, 0, p, button, false, false));
 		return true;
@@ -186,7 +220,10 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 
 	@Override
 	public void onLongPress(MotionEvent event) {
-		int p = (int) (event.getPressure() * PRESSURE_RESOLUTION);
+		if (touchAbsolute)
+			return;
+		
+		float p = event.getPressure();
 		xorgClient.queue(XEvent.button(0, 0, p, XEvent.Button.BUTTON_1, true, false));
 	}
 
