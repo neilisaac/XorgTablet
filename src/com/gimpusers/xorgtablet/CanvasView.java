@@ -150,11 +150,13 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 	}
 
 	@Override
-	public void onShowPress(MotionEvent arg0) {
+	public void onLongPress(MotionEvent event) {
+		int p = (int) (event.getPressure() * PRESSURE_RESOLUTION);
+		xorgClient.queue(XEvent.button(0, 0, p, XEvent.Button.BUTTON_1, true, false));
 	}
 
 	@Override
-	public void onLongPress(MotionEvent e) {
+	public void onShowPress(MotionEvent arg0) {
 	}
 
 	@Override
