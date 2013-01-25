@@ -124,10 +124,10 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 					break;
 				}
 			}
-			
-			else if (touchEnabled && !touchAbsolute) {
-				return gesture.onTouchEvent(event);
-			}
+		}
+		
+		if (touchEnabled && !touchAbsolute) {			
+			return gesture.onTouchEvent(event);
 		}
 		
 		return false;
@@ -135,7 +135,33 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 
 	@Override
 	public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx, float dy) {
-		xorgClient.queue(XEvent.motion((int) -dx, (int) -dy, 0, false));
+		XEvent.Button button;
+		int p = (int) (e2.getPressure() * PRESSURE_RESOLUTION);
+		
+		switch (e2.getPointerCount()) {
+		default:
+		case 1:
+			xorgClient.queue(XEvent.motion((int) -dx, (int) -dy, 0, false));
+			break;
+			
+		case 2:
+			if (Math.abs(dy) > Math.abs(dx)) {
+				if (dy > 0)
+					button = XEvent.Button.BUTTON_4;
+				else
+					button = XEvent.Button.BUTTON_5;
+			} else {
+				if (dx > 0)
+					button = XEvent.Button.BUTTON_6;
+				else
+					button = XEvent.Button.BUTTON_7;
+			}
+			
+			xorgClient.queue(XEvent.button(0, 0, p, button, true, false));
+			xorgClient.queue(XEvent.button(0, 0, p, button, false, false));
+			break;
+		}
+		
 		return true;
 	}
 
@@ -146,9 +172,10 @@ public class CanvasView extends View implements OnSharedPreferenceChangeListener
 
 	@Override
 	public boolean onSingleTapUp(MotionEvent event) {
+		XEvent.Button button = XEvent.Button.BUTTON_1;
 		int p = (int) (event.getPressure() * PRESSURE_RESOLUTION);
-		xorgClient.queue(XEvent.button(0, 0, p, XEvent.Button.BUTTON_1, true, false));
-		xorgClient.queue(XEvent.button(0, 0, p, XEvent.Button.BUTTON_1, false, false));
+		xorgClient.queue(XEvent.button(0, 0, p, button, true, false));
+		xorgClient.queue(XEvent.button(0, 0, p, button, false, false));
 		return true;
 	}
 

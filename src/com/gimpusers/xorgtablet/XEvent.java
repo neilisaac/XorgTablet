@@ -7,7 +7,7 @@ import java.io.IOException;
 public class XEvent {
 	
 	public enum Type { MOTION_ABSOLUTE, BUTTON_ABSOLUTE, RESOLUTION, MOTION_RELATIVE, BUTTON_RELATIVE, DISCONNECT };
-	public enum Button { NO_BUTTON, BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5 };
+	public enum Button { NO_BUTTON, BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8 };
 	
 	private Type type;
 	private int x, y, pressure;
