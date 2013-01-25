@@ -4,6 +4,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.view.Menu;
@@ -24,6 +27,26 @@ public class CanvasActivity extends Activity {
 
 		setContentView(new CanvasView(this, xorgClient));
 	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		
+		case R.id.show_settings:
+			startActivity(new Intent(CanvasActivity.this, SettingsActivity.class));
+			return true;
+			
+		case R.id.show_gestures:
+			showGesturesDialog();
+			return true;
+			
+		case R.id.show_about:
+			showAboutDialog();
+			return true;
+		}
+		
+		return false;
+	}
 
 	@Override
 	protected void onDestroy() {
@@ -36,12 +59,27 @@ public class CanvasActivity extends Activity {
 		getMenuInflater().inflate(R.menu.activity_canvas, menu);
 		return true;
 	}
-
-	public void showAbout(MenuItem item) {
-		startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(("https://github.com/rfc2822/XorgTablet"))));
+	
+	private void showGesturesDialog() {
+		final Builder dialog = new AlertDialog.Builder(this);
+		
+		dialog.setTitle(R.string.menu_gestures);
+		dialog.setIcon(R.drawable.ic_launcher);
+		dialog.setMessage(getString(R.string.gestures));
+		dialog.show();
 	}
 	
-	public void showSettings(MenuItem item) {
-		startActivity(new Intent(CanvasActivity.this, SettingsActivity.class));
+	private void showAboutDialog() {
+		final Builder dialog = new AlertDialog.Builder(this);
+		dialog.setTitle(R.string.app_name);
+		dialog.setIcon(R.drawable.ic_launcher);
+		dialog.setMessage(getString(R.string.about));
+		dialog.setNeutralButton(R.string.button_website, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse((getString(R.string.website)))));
+			}
+		});
+		dialog.show();
 	}
 }

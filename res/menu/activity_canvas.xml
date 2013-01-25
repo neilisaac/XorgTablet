@@ -1,13 +1,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
-        android:orderInCategory="100"
+        android:id="@+id/show_settings"
         android:showAsAction="ifRoom"
-        android:title="@string/menu_settings" android:onClick="showSettings"/>
-
-        <item
-        android:orderInCategory="100"
+        android:title="@string/menu_settings"/>
+    <item
+        android:id="@+id/show_gestures"
         android:showAsAction="never"
-        android:title="@string/menu_about" android:onClick="showAbout"/>
-    
+        android:title="@string/menu_gestures"/>
+    <item
+        android:id="@+id/show_about"
+        android:showAsAction="never"
+        android:title="@string/menu_about"/>
+
 </menu>
